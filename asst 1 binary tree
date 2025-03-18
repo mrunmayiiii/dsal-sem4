@@ -1,0 +1,191 @@
+#include <iostream>
+#include <string>
+using namespace std;
+class node {
+    public:
+         string word;
+         string meaning;
+         node* left;
+         node* right;
+         
+         node() {
+             word = "";
+             meaning="";
+             left = NULL;
+             right = NULL;
+         }
+};
+node* createbinary(node* root, string& wor, string& meaning) {
+     if (wor == "") {
+        return NULL;
+     }
+     if (root == NULL) {
+         node* newnode = new node();
+         newnode->word = wor;
+         newnode->meaning = meaning;
+         return newnode;
+     }
+     if (wor < root->word) {
+       root->left = createbinary(root->left, wor, meaning);
+     }
+     else if (wor > root->word) {
+        root->right = createbinary(root->right, wor, meaning);
+     }
+     return root;
+}
+node* getSuccessor(node* curr) {
+     curr = curr->right;
+     while (curr != nullptr && curr->left != nullptr)
+     curr = curr->left;
+     return curr;
+}
+
+void inorder(node* root) {
+     if (root == NULL) {
+     return;
+     }
+     inorder(root->left);
+     cout << root->word << ": " << root->meaning << " ";
+     cout<<endl;
+     inorder(root->right);
+}
+node* deletekey(node* root, string delword) {
+     if (root == NULL) {
+        return NULL;
+     }
+     if (delword < root->word) {
+         root->left = deletekey(root->left, delword);
+     } 
+     else if (delword > root->word) {
+        root->right = deletekey(root->right, delword);
+     } else {
+         if (root->left == NULL && root->right == NULL) {
+             delete root;
+             return NULL;
+         } else if (root->left == NULL) {
+             node* temp = root->right;
+             delete root;
+             return temp;
+         } else if (root->right == NULL) {
+             node* temp = root->left;
+             delete root;
+             return temp;
+         } else {
+             node* succ = getSuccessor(root);
+             root->word = succ->word;
+             root->right = deletekey(root->right, succ->word);
+ }
+ }
+ return root;
+}
+node* update(node* root, string ogword, string upword, string newmeaning,bool& found) {
+     if (root == NULL) {
+         node* newNode = new node();
+         newNode->word = upword;
+         newNode->meaning = newmeaning;
+         return newNode;
+    }
+
+     if (root->word == ogword) {
+         root->word = upword;
+         root->meaning = newmeaning;
+         found = true;
+     } else if (ogword < root->word) {
+         root->left = update(root->left, ogword, upword, newmeaning, found);
+     } else {
+             root->right = update(root->right, ogword, upword, newmeaning,
+            found);
+     }
+
+    return root;
+}
+
+node* comparisons(node* root, int& count, string sword) {
+     if (root == NULL) {
+         return NULL;
+     }
+     if (root->word == sword) {
+         return root;
+     } else if (sword < root->word) {
+         count++;
+         return comparisons(root->left, count, sword);
+     } else {
+         count++;
+         return comparisons(root->right, count, sword);
+     }
+}
+int main() {
+ node* root = NULL;
+ while (true) {
+     cout << "\nDictionary Menu:\n";
+     cout << "1. Add a word\n";
+     cout << "2. Delete a word\n";
+     cout << "3. Update a word\n";
+     cout << "4. Search for a word\n";
+     cout << "5. Display dictionary \n";
+     cout << "6. Exit\n";
+     cout << "Enter your choice: ";
+     int choice;
+     cin >> choice;
+     if (choice == 6) {
+     cout << "Exiting the program. Goodbye!\n";
+     break;
+ }
+ string word, newword,meaning,upmeaning;
+ bool found =false;
+     switch (choice) {
+         case 1:
+             {
+            cout << "Enter the word to add: ";
+             cin >> word;
+             cout << "Enter the meaning of the word: ";
+             cin>>meaning;
+             root = createbinary(root, word, meaning);
+             break;
+         }
+         case 2:
+             { cout << "Enter the word to delete: ";
+             cin >> word;
+             root = deletekey(root, word);
+             break;
+                 
+             }
+     case 3:
+             { 
+                cout << "Enter the word to update: ";
+             cin >> word;
+             cout << "Enter the new word: ";
+             cin >> newword;
+             cout << "Enter the new word meaning: ";
+             cin >> upmeaning;
+             root = update(root, word, newword, upmeaning, found);
+             if (!found) {
+                cout << "Word not found.\n";
+             }
+             break;}
+        case 4:
+             { cout << "Enter the word to search for: ";
+             cin >> word;
+             int count = 0;
+             if (comparisons(root, count, word)) {
+             cout << "Word found after " << count << " comparisons.\n";
+             } else {
+             cout << "Word not found.\n";
+             }
+             break;
+            
+             }
+        case 5:
+             {cout << "Dictionary contents : ";
+             cout<<endl;
+             inorder(root);
+             cout << endl;
+             break;
+            
+             }
+        default:
+         cout << "Invalid choice. Please try again.\n";
+         }
+    }
+ return 0;
+}
