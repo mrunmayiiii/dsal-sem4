@@ -15,200 +15,183 @@ public:
     }
 };
 
-class Binarytree {
-public:
-    Node *root;
+Node* buildTree() {
+    cout << "Enter element to be added (-1 for NULL): ";
+    int ele;
+    cin >> ele;
 
-    Binarytree() {
-        root = NULL;
+    if (ele == -1) {
+        return NULL;
     }
 
-    Node* buildTree() {
-        cout << "Enter element to be added (-1 for NULL): ";
-        int ele;
-        cin >> ele;
-        
-        if (ele == -1) {
-            return NULL;
+    Node* newNode = new Node(ele);
+
+    cout << "Enter left child of " << ele << endl;
+    newNode->left = buildTree();
+
+    cout << "Enter right child of " << ele << endl;
+    newNode->right = buildTree();
+
+    return newNode;
+}
+
+void inorderRec(Node *node) {
+    if (!node) return;
+    inorderRec(node->left);
+    cout << node->data << " ";
+    inorderRec(node->right);
+}
+
+void preorderRec(Node *node) {
+    if (!node) return;
+    cout << node->data << " ";
+    preorderRec(node->left);
+    preorderRec(node->right);
+}
+
+void postorderRec(Node *node) {
+    if (!node) return;
+    postorderRec(node->left);
+    postorderRec(node->right);
+    cout << node->data << " ";
+}
+
+void inorderIter(Node* root) {
+    stack<Node*> s;
+    Node* curr = root;
+    while (curr != NULL || !s.empty()) {
+        while (curr != NULL) {
+            s.push(curr);
+            curr = curr->left;
         }
-
-        Node* newNode = new Node(ele);
-
-        cout << "Enter left child of " << ele << endl;
-        newNode->left = buildTree();
-        
-        cout << "Enter right child of " << ele << endl;
-        newNode->right = buildTree();
-
-        return newNode;
+        curr = s.top();
+        s.pop();
+        cout << curr->data << " ";
+        curr = curr->right;
     }
+}
 
-    void initializeTree() {
-        root = buildTree();
+void preorderIter(Node* root) {
+    if (!root) return;
+    stack<Node*> s;
+    s.push(root);
+    while (!s.empty()) {
+        Node* curr = s.top();
+        s.pop();
+        cout << curr->data << " ";
+        if (curr->right) s.push(curr->right);
+        if (curr->left) s.push(curr->left);
     }
+}
 
-    Binarytree(const Binarytree &other) {
-        root = copyTree(other.root);
+void postorderIter(Node* root) {
+    if (!root) return;
+    stack<Node*> s1, s2;
+    s1.push(root);
+    while (!s1.empty()) {
+        Node* curr = s1.top();
+        s1.pop();
+        s2.push(curr);
+        if (curr->left) s1.push(curr->left);
+        if (curr->right) s1.push(curr->right);
     }
-
-    Binarytree &operator=(const Binarytree &other) {
-        if (this == &other) {
-            return *this;
-        }
-        eraseAllNodes();
-        root = copyTree(other.root);
-        return *this;
+    while (!s2.empty()) {
+        cout << s2.top()->data << " ";
+        s2.pop();
     }
+}
 
-    Node *copyTree(Node *node) {
-        if (!node) return NULL;
+int height(Node *node) {
+    if (!node) return 0;
+    return max(height(node->left), height(node->right)) + 1;
+}
 
-        Node *newNode = new Node(node->data);
-        newNode->left = copyTree(node->left);
-        newNode->right = copyTree(node->right);
-        return newNode;
-    }
+int countLeaves(Node *node) {
+    if (!node) return 0;
+    if (!node->left && !node->right) return 1;
+    return countLeaves(node->left) + countLeaves(node->right);
+}
 
-    void inorderRec(Node *node) {
-        if (!node) return;
-        inorderRec(node->left);
-        cout << node->data << " ";
-        inorderRec(node->right);
-    }
+int countInternalNodes(Node *node) {
+    if (!node || (!node->left && !node->right)) return 0;
+    return 1 + countInternalNodes(node->left) + countInternalNodes(node->right);
+}
 
-    void inorderRecursive() {
-        inorderRec(root);
-        cout << endl;
-    }
+void erase(Node *node) {
+    if (!node) return;
+    erase(node->left);
+    erase(node->right);
+    delete node;
+}
 
-    void preorderRec(Node *node) {
-        if (!node) return;
-        cout << node->data << " ";
-        preorderRec(node->left);
-        preorderRec(node->right);
-    }
+void swapChildren(Node *node) {
+    if (!node) return;
+    swap(node->left, node->right);
+    swapChildren(node->left);
+    swapChildren(node->right);
+}
 
-    void preorderRecursive() {
-        preorderRec(root);
-        cout << endl;
-    }
+void mirrorRec(Node *node) {
+    if (!node) return;
+    swap(node->left, node->right);
+    mirrorRec(node->left);
+    mirrorRec(node->right);
+}
 
-    void postorderRec(Node *node) {
-        if (!node) return;
-        postorderRec(node->left);
-        postorderRec(node->right);
-        cout << node->data << " ";
-    }
-
-    void postorderRecursive() {
-        postorderRec(root);
-        cout << endl;
-    }
-
-    int height(Node *node) {
-        if (!node) return 0;
-        return max(height(node->left), height(node->right)) + 1;
-    }
-
-    int getHeight() {
-        return height(root) - 1;
-    }
-
-    int countLeaves(Node *node) {
-        if (!node) return 0;
-        if (!node->left && !node->right) return 1;
-        return countLeaves(node->left) + countLeaves(node->right);
-    }
-
-    int getLeafCount() {
-        return countLeaves(root);
-    }
-
-    int countInternalNodes(Node *node) {
-        if (!node || (!node->left && !node->right)) return 0;
-        return 1 + countInternalNodes(node->left) + countInternalNodes(node->right);
-    }
-
-    int getInternalNodeCount() {
-        return countInternalNodes(root);
-    }
-
-    void erase(Node *node) {
-        if (!node) return;
-        erase(node->left);
-        erase(node->right);
-        delete node;
-    }
-
-    void eraseAllNodes() {
-        erase(root);
-        root = nullptr;
-    }
-
-    void swapChildren(Node *node) {
-        if (!node) return;
-        swap(node->left, node->right);
-        swapChildren(node->left);
-        swapChildren(node->right);
-    }
-
-    void swapTree() {
-        swapChildren(root);
-    }
-
-    void mirrorRec(Node *node) {
-        if (!node) return;
-        swap(node->left, node->right);
-        mirrorRec(node->left);
-        mirrorRec(node->right);
-    }
-
-    void mirror() {
-        mirrorRec(root);
-    }
-};
+Node* copyTree(Node* root) {
+    if (!root) return NULL;
+    Node* newNode = new Node(root->data);
+    newNode->left = copyTree(root->left);
+    newNode->right = copyTree(root->right);
+    return newNode;
+}
 
 int main() {
-    Binarytree tree;
-    tree.initializeTree();
+    Node* root = buildTree();
 
-    cout << "\nIn-order traversal: ";
-    tree.inorderRecursive();
+    cout << "\nIn-order traversal (Recursive): ";
+    inorderRec(root);
 
-    cout << "Pre-order traversal: ";
-    tree.preorderRecursive();
+    cout << "\nIn-order traversal (Iterative): ";
+    inorderIter(root);
 
-    cout << "Post-order traversal: ";
-    tree.postorderRecursive();
+    cout << "\nPre-order traversal (Recursive): ";
+    preorderRec(root);
 
-    cout << "Height of the tree: " << tree.getHeight() << endl;
-    cout << "Number of leaf nodes: " << tree.getLeafCount() << endl;
-    cout << "Number of internal nodes: " << tree.getInternalNodeCount() << endl;
+    cout << "\nPre-order traversal (Iterative): ";
+    preorderIter(root);
 
-    cout << "In-order before swapping children: ";
-    tree.inorderRecursive();
-    tree.swapTree();
-    cout << "In-order after swapping children: ";
-    tree.inorderRecursive();
+    cout << "\nPost-order traversal (Recursive): ";
+    postorderRec(root);
 
-    cout << "In-order before mirroring: ";
-    tree.inorderRecursive();
-    tree.mirror();
-    cout << "In-order after mirroring: ";
-    tree.inorderRecursive();
+    cout << "\nPost-order traversal (Iterative): ";
+    postorderIter(root);
 
-    Binarytree copyTree = tree;
-    cout << "In-order of copied tree: ";
-    copyTree.inorderRecursive();
+    cout << "\nHeight of the tree: " << height(root) - 1;
+    cout << "\nNumber of leaf nodes: " << countLeaves(root);
+    cout << "\nNumber of internal nodes: " << countInternalNodes(root);
 
-    Binarytree assignedTree;
-    assignedTree = tree;
-    cout << "In-order of assigned tree: ";
-    assignedTree.inorderRecursive();
+    cout << "\nIn-order before swapping children: ";
+    inorderRec(root);
+    swapChildren(root);
+    cout << "\nIn-order after swapping children: ";
+    inorderRec(root);
 
-    tree.eraseAllNodes();
-    cout << "In-order after erasing all nodes: ";
-    tree.inorderRecursive();
+    cout << "\nIn-order before mirroring: ";
+    inorderRec(root);
+    mirrorRec(root);
+    cout << "\nIn-order after mirroring: ";
+    inorderRec(root);
+
+    Node* copiedTree = copyTree(root);
+    cout << "\nIn-order traversal of copied tree: ";
+    inorderRec(copiedTree);
+
+    erase(root);
+    cout << "\nIn-order after erasing all nodes: ";
+    inorderRec(root);
 
     return 0;
 }
+
+
