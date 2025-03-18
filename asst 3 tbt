@@ -1,0 +1,263 @@
+#include<iostream>
+using namespace std;
+
+class node {
+public:
+    node* left;
+    bool lthread;
+    int data;
+    bool rthread;
+    node* right;
+
+    node() {
+        left = NULL;
+        lthread = false;
+        data = 0;
+        rthread = false;
+        right = NULL;
+    }
+};
+
+node* insert(node* root, int num) {
+    node* temp;
+    node* parent;
+    node* ptr;
+    int found = 0;
+    ptr = root;
+    parent = NULL;
+
+    while (ptr != NULL) {
+        if (num == ptr->data) {
+            found = 1;
+            break;
+        }
+        parent = ptr;
+        if (num < ptr->data) {
+            if (!ptr->lthread) {
+                ptr = ptr->left;
+            } else {
+                break;
+            }
+        } else {
+            if (!ptr->rthread) {
+                ptr = ptr->right;
+            } else {
+                break;
+            }
+        }
+    }
+
+    if (found) {
+        cout << "Duplicate key\n";
+    } else {
+        temp = new node();
+        temp->data = num;
+        temp->lthread = true;
+        temp->rthread = true;
+
+        if (parent == NULL) {
+            root = temp;
+            temp->left = NULL;
+            temp->right = NULL;
+        } else if (num < parent->data) {
+            temp->left = parent->left;
+            temp->right = parent;
+            parent->lthread = false;
+            parent->left = temp;
+        } else {
+            temp->left = parent;
+            temp->right = parent->right;
+            parent->rthread = false;
+            parent->right = temp;
+        }
+    }
+    return root;
+}
+
+node* in_succ(node* ptr) {
+    if (ptr->rthread) {
+        return ptr->right;
+    } else {
+        ptr = ptr->right;
+        while (!ptr->lthread) {
+            ptr = ptr->left;
+        }
+        return ptr;
+    }
+}
+
+node* in_pred(node* ptr) {
+    if (ptr->lthread) {
+        return ptr->left;
+    } else {
+        ptr = ptr->left;
+        while (!ptr->rthread) {
+            ptr = ptr->right;
+        }
+        return ptr;
+    }
+}
+
+void inorder(node* root) {
+    node* ptr;
+    if (root == NULL) {
+        cout << "Tree is empty\n";
+        return;
+    }
+
+    ptr = root;
+    while (!ptr->lthread) {
+        ptr = ptr->left;
+    }
+
+    while (ptr != NULL) {
+        cout << ptr->data << " ";
+        ptr = in_succ(ptr);
+    }
+    cout << endl;
+}
+
+void preorder(node* root) {
+    node* ptr;
+    if (root == NULL) {
+        cout << "Tree is empty\n";
+        return;
+    }
+
+    ptr = root;
+    while (ptr != NULL) {
+        cout << ptr->data << " ";
+        if (!ptr->lthread) {
+            ptr = ptr->left;
+        } else if (!ptr->rthread) {
+            ptr = ptr->right;
+        } else {
+            while (ptr != NULL && ptr->rthread) {
+                ptr = ptr->right;
+            }
+            if (ptr != NULL) {
+                ptr = ptr->right;
+            }
+        }
+    }
+    cout << endl;
+}
+
+node* casea(node* root, node* par, node* ptr) {
+    if (par == NULL)
+        root = NULL;
+    else if (ptr == par->left) {
+        par->lthread = true;
+        par->left = ptr->left;
+    } else {
+        par->rthread = true;
+        par->right = ptr->right;
+    }
+    delete(ptr);
+    return root;
+}
+
+node* caseb(node* root, node* par, node* ptr) {
+    node* child = (ptr->lthread == false) ? ptr->left : ptr->right;
+
+    if (par == NULL) {
+        root = child;
+    } else if (ptr == par->left) {
+        par->left = child;
+    } else {
+        par->right = child;
+    }
+
+    node* s = in_succ(ptr);
+    node* p = in_pred(ptr);
+
+    if (!ptr->lthread) {
+        p->right = s;
+    } else if (!ptr->rthread) {
+        s->left = p;
+    }
+
+    delete(ptr);
+    return root;
+}
+
+node* casec(node* root, node* par, node* ptr) {
+    node* parsucc = ptr;
+    node* succ = ptr->right;
+
+    while (succ->left != NULL) {
+        parsucc = succ;
+        succ = succ->left;
+    }
+
+    ptr->data = succ->data;
+
+    if (succ->lthread && succ->rthread) {
+        root = casea(root, parsucc, succ);
+    } else {
+        root = caseb(root, parsucc, succ);
+    }
+
+    return root;
+}
+
+node* delnode(node* root, int dkey) {
+    node* par = NULL;
+    node* ptr = root;
+    int found = 0;
+
+    while (ptr != NULL) {
+        if (dkey == ptr->data) {
+            found = 1;
+            break;
+        }
+        par = ptr;
+        ptr = (dkey < ptr->data) ? (!ptr->lthread ? ptr->left : NULL) : (!ptr->rthread ? ptr->right : NULL);
+    }
+
+    if (!found) {
+        cout << "Key not present\n";
+    } else if (!ptr->lthread && !ptr->rthread) {
+        root = casec(root, par, ptr);
+    } else if (!ptr->lthread) {
+        root = caseb(root, par, ptr);
+    } else if (!ptr->rthread) {
+        root = caseb(root, par, ptr);
+    } else {
+        root = casea(root, par, ptr);
+    }
+    return root;
+}
+
+int main() {
+    int choice, num;
+    node* root = NULL;
+    do {
+        cout << "Enter the option :\n1. Insert in BST\n2. Inorder traversal\n3. Preorder traversal\n4. Delete\n5. Quit\nEnter your choice : ";
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                cout << "Enter the number to be inserted : ";
+                cin >> num;
+                root = insert(root, num);
+                break;
+            case 2:
+                inorder(root);
+                break;
+            case 3:
+                preorder(root);
+                break;
+            case 4:
+                cout << "Enter the number to be deleted : ";
+                cin >> num;
+                root = delnode(root, num);
+                break;
+            case 5:
+                cout << "Quitting...\n";
+                break;
+            default:
+                cout << "Invalid choice\n";
+        }
+    } while (choice != 5);
+    return 0;
+}
