@@ -1,0 +1,19 @@
+void iterativeDFS(vector<vector<int>>& adj, vector<int>& visited, int start) {
+    stack<int> st;
+    st.push(start);
+    visited[start] = 1;
+
+    while (!st.empty()) {
+        int node = st.top();
+        cout << node << " ";
+        st.pop();
+
+        // Traverse the neighbors in reverse to maintain correct order
+        for (int i = adj[node].size() - 1; i >= 0; i--) {
+            if (!visited[adj[node][i]]) {
+                st.push(adj[node][i]);
+                visited[adj[node][i]] = 1;
+            }
+        }
+    }
+}
