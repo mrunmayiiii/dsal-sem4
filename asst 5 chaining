@@ -5,113 +5,105 @@ using namespace std;
 #define SIZE 10 
 
 class Node{
+    public:
     int data;
     Node* next;
-public:
+
     Node(int val) {
         data = val;
         next = NULL;
     }
-    friend class Htable;
+
 };
 
-class Htable{
-    vector<Node*> vec;
+vector<Node*> vec(SIZE, NULL);
 
-public:
-    Htable() {
-        for(int i=0; i<SIZE; i++) {
-            vec.push_back(NULL);
+int HashCode(int data){
+    return data % SIZE;
+}
+
+void Insert(int val) { 
+    int hashKey = HashCode(val);
+    Node* temp = new Node(val);
+
+    if(!vec[hashKey]){
+        vec[hashKey] = temp;
+    } else {
+        Node* head = vec[hashKey];
+        while(head->next != NULL){
+            head = head->next;
         }
+        head->next = temp;
     }
+    cout << "Inserted " << val << " into hash table.\n";
+}
 
-    int HashCode(int data){
-        return data % SIZE;
-    }
-
-    void Insert(int val) { 
-        int hashKey = HashCode(val);
-        Node* temp = new Node(val);
-
-        if(!vec[hashKey]){
-            vec[hashKey] = temp;
-        } else {
-            Node* head = vec[hashKey];
-            while(head->next != NULL){
-                head = head->next;
-            }
-            head->next = temp;
+void Display() {
+    for(int i=0; i<SIZE; i++) {
+        if(!vec[i]){
+            cout<<"Idx: "<< i << ": Empty "<<endl;
         }
-    }
-
-    void display() {
-        for(int i=0; i<SIZE; i++) {
-            if(!vec[i]){
-                cout<<"Idx: "<< i << ": Empty "<<endl;
-            }
-            else{
-                Node* head = vec[i];
-                cout<<"Idx: "<< i;
-                while(head != NULL){
-                    cout<<" -> " << head->data;
-                    head = head->next;
-                }
-                cout << endl;
-            }
-        }
-    }
-
-    void Find(int val){
-        int hashKey = HashCode(val);
-        if(!vec[hashKey]){
-            cout<<"NOT FOUND"<<endl;
-        }else{
-           Node* head = vec[hashKey];
+        else{
+            Node* head = vec[i];
+            cout<<"Idx: "<< i;
             while(head != NULL){
-                if(head->data == val){
-                    cout<<"Data "<< head->data <<" found at Idx: "<<hashKey<<endl;
-                    return;
-                }
+                cout<<" -> " << head->data;
                 head = head->next;
             }
-            cout<<"NOT FOUND"<<endl;
+            cout << endl;
         }
     }
+}
 
-    void Delete(int val){
-        int hashKey = HashCode(val);
-
-        if(!vec[hashKey]){
-            cout<<"NOT FOUND to Delete"<<endl;
-        }else{
-           Node* head = vec[hashKey];
-
-           if(head->data == val){
-               vec[hashKey] = head->next;
-               delete head;
-               cout << "Deleted "<< val << endl;
-               return;
-           }
-
-           while(head->next != NULL && head->next->data != val){
-               head = head->next;
-           }
-
-           if(head->next == NULL){
-               cout<<"NOT FOUND to Delete"<<endl;
-           } else {
-               Node* del = head->next;
-               head->next = head->next->next;
-               del->next = NULL;
-               delete del;
-               cout << "Deleted "<< val << endl;
-           }
+void Find(int val){
+    int hashKey = HashCode(val);
+    if(!vec[hashKey]){
+        cout<<"NOT FOUND"<<endl;
+    }else{
+       Node* head = vec[hashKey];
+        while(head != NULL){
+            if(head->data == val){
+                cout<<"Data "<< head->data <<" found at Idx: "<<hashKey<<endl;
+                return;
+            }
+            head = head->next;
         }
+        cout<<"NOT FOUND"<<endl;
     }
-};
+}
+
+void Delete(int val){
+    int hashKey = HashCode(val);
+
+    if(!vec[hashKey]){
+        cout<<"NOT FOUND to Delete"<<endl;
+    }else{
+       Node* head = vec[hashKey];
+
+       if(head->data == val){
+           vec[hashKey] = head->next;
+           delete head;
+           cout << "Deleted "<< val << endl;
+           return;
+       }
+
+       while(head->next != NULL && head->next->data != val){
+           head = head->next;
+       }
+
+       if(head->next == NULL){
+           cout<<"NOT FOUND to Delete"<<endl;
+       } else {
+           Node* del = head->next;
+           head->next = head->next->next;
+           del->next = NULL;
+           delete del;
+           cout << "Deleted "<< val << endl;
+       }
+    }
+}
 
 int main() {
-    Htable ht;
     int choice, val;
 
     while(true) {
@@ -128,25 +120,24 @@ int main() {
             case 1:
                 cout << "Enter value to insert: ";
                 cin >> val;
-                ht.Insert(val);
-                cout << "Inserted " << val << " into hash table.\n";
+                Insert(val);
                 break;
 
             case 2:
                 cout << "Displaying Hash Table:\n";
-                ht.display();
+                Display();
                 break;
 
             case 3:
                 cout << "Enter value to find: ";
                 cin >> val;
-                ht.Find(val);
+                Find(val);
                 break;
 
             case 4:
                 cout << "Enter value to delete: ";
                 cin >> val;
-                ht.Delete(val);
+                Delete(val);
                 break;
 
             case 5:
