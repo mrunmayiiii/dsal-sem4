@@ -1,0 +1,163 @@
+#include<iostream>
+#include<vector>
+using namespace std;
+
+class hashTable {
+public:
+    vector<long long> arr;
+    int tablesize;
+    int comparisons;
+
+    hashTable(int size) {
+        tablesize = size;
+        arr.resize(tablesize, -1);
+        comparisons = 0;
+    }
+
+    int hash(int val) {
+        int sum = 0;
+        while (val > 0) {
+            sum += val % 10;
+            val = val / 10;
+        }
+        return sum % tablesize;
+    }
+
+    void insertByWithoutReplace(int number) {
+        int h = hash(number);
+        comparisons = 0;
+
+        if (arr[h] == -1) {
+            arr[h] = number;
+            return;
+        }
+
+        int i = h + 1;
+        while (i % tablesize != h) {
+            comparisons++;
+            if (arr[i % tablesize] == -1) {
+                arr[i % tablesize] = number;
+                return;
+            }
+            i++;
+        }
+        cout << "Hash Table is full, cannot insert " << number << endl;
+    }
+
+    void insertByReplace(int number) {
+        int h = hash(number);
+        comparisons = 0;
+
+        if (arr[h] == -1) {
+            arr[h] = number;
+            return;
+        }
+
+        if (hash(arr[h]) != h) {
+            long long temp = number;
+            number = arr[h];
+            arr[h] = temp;
+        }
+        comparisons++;
+
+        int i = h + 1;
+        while (i % tablesize != h) {
+            comparisons++;
+            if (arr[i % tablesize] == -1) {
+                arr[i % tablesize] = number;
+                return;
+            }
+            i++;
+        }
+        cout << "Hash Table is full, cannot insert " << number << endl;
+    }
+
+    bool search(int number) {
+        int h = hash(number);
+        comparisons = 0;
+
+        if (arr[h] == number) {
+            cout << "Found at index: " << h << endl;
+            cout << "Number of comparisons: " << comparisons << endl;
+            return true;
+        }
+
+        int i = h + 1;
+        while (i % tablesize != h) {
+            comparisons++;
+            if (arr[i % tablesize] == number) {
+                cout << "Found at index: " << i % tablesize << endl;
+                cout << "Number of comparisons: " << comparisons << endl;
+                return true;
+            }
+            if (arr[i % tablesize] == -1) {
+                cout << "Not found" << endl;
+                return false;
+            }
+            i++;
+        }
+        cout << "Not found" << endl;
+        return false;
+    }
+
+    void display() {
+        for (int i = 0; i < tablesize; i++) {
+            if (arr[i] != -1) {
+                cout << "Index " << i << ": " << arr[i] << endl;
+            }
+        }
+    }
+
+    int getComparisons() {
+        return comparisons;
+    }
+};
+
+int main() {
+    long long choice, size, number;
+    cout << "Enter the size of the hash table: ";
+    cin >> size;
+
+    hashTable htWithoutReplace(size);
+    hashTable htWithReplace(size);
+
+    do {
+        cout << "\nHash Table Menu:\n";
+        cout << "1. Insert (in both)\n";
+        cout << "2. Search\n";
+        cout << "3. Display\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter the number to insert: ";
+                cin >> number;
+                htWithoutReplace.insertByWithoutReplace(number);
+                htWithReplace.insertByReplace(number);
+                break;
+            case 2:
+                cout << "Enter the number to search for: ";
+                cin >> number;
+                cout << "Without replacement: " << endl;
+                htWithoutReplace.search(number);
+                cout << "With replacement: " << endl;
+                htWithReplace.search(number);
+                break;
+            case 3:
+                cout << "Hash Table without replacement:\n";
+                htWithoutReplace.display();
+                cout << "Hash Table with replacement:\n";
+                htWithReplace.display();
+                break;
+            case 4:
+                cout << "Exiting program." << endl;
+                break;
+            default:
+                cout << "Invalid choice! Please try again." << endl;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
