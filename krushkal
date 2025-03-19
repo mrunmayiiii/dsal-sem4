@@ -1,1 +1,154 @@
 
+#include <bits/stdc++.h>
+using namespace std;
+
+
+void input(unordered_map<int, vector<pair<int, int>>>& adj, int& node) {
+    cout<<"Enter Edges and weights : [U, V, Wt]"<<endl;
+
+    int u, v, wt, mini = 1e9;
+    while(true) {
+        cin>>u>>v>>wt;
+        if(wt<mini && wt!=-1) {
+            mini = wt;
+            node = u;
+        }
+
+        if(u==-1 && v==-1) break;
+
+        adj[u].push_back({v,wt});
+        adj[v].push_back({u,wt});
+    }
+}
+
+
+bool hasCycle(int src, unordered_map<int, vector<pair<int, int>>>& adj) { //Space = O(2N)
+    unordered_map<int,int> vis;
+    queue<pair<int, int>> q;
+
+    q.push({src, -1});
+
+    vis[src] = 1;
+
+    while(!q.empty()) { // Time = O(N)
+        int node = q.front().first;
+        int parent = q.front().second;
+        q.pop();
+
+        for(auto it : adj[node]) { // pair = {dest, wt}
+            int curr = it.first;
+            if(vis.count(curr)==0) {
+                q.push({curr, node}); // node is the parent
+                vis[curr] = 1;
+            }
+            else if(parent != curr) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+void prims(unordered_map<int, vector<pair<int, int>>>& adj, unordered_map<int, vector<pair<int, int>>> ans, int node) {
+    unordered_map<int,int> vis;
+    vis[node] = 1;
+
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+    for(auto& it:adj[node]) {
+        pq.push({it.second, it.first, node});
+    }
+
+    while(!pq.empty()) {
+        int dis = pq.top()[0];
+        int node = pq.top()[1];
+        int par = pq.top()[2];
+        pq.pop();
+
+        if(vis.count(node)==0) {
+            vis[node] = 1;
+            ans[par].push_back({node,dis});
+
+            for(auto& it:adj[node]) {
+                pq.push({it.second, it.first, node});
+            }
+        }
+    }
+
+    int total_wt = 0;
+    for(auto& it:ans) {
+        cout << it.first << " : ";
+        for(int i=0; i<it.second.size(); i++) {
+            cout << "(" << it.second[i].first << "," << it.second[i].second << ")";
+            total_wt += it.second[i].second;
+        }
+        cout << endl;
+    }
+
+    cout << endl;
+    cout << "The Weight of MST is: " << total_wt << endl;
+}
+
+
+void kruskals(unordered_map<int, vector<pair<int,int>>>& adj, unordered_map<int, vector<pair<int,int>>> ans) {
+    set<pair<int,int>> st;
+    priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> pq;
+
+    for(auto& it:adj) {
+        vector<pair<int,int>> temp = it.second;
+        for(int i=0; i<temp.size(); i++) {
+            if(st.count({it.first, temp[i].first})==0) {
+                pq.push({temp[i].second, it.first, temp[i].first});
+                st.insert({temp[i].first, it.first});
+                st.insert({it.first, temp[i].first});
+            }
+        }
+    }
+
+    while(!pq.empty()) {
+        int dis = pq.top()[0];
+        int u = pq.top()[1];
+        int v = pq.top()[2];
+        pq.pop();
+
+
+        ans[u].push_back({v,dis});
+        ans[v].push_back({u,dis});
+        if(hasCycle(u,ans)) {
+            ans[u].pop_back();
+            ans[v].pop_back();
+        }
+    }
+
+    int total_wt = 0;
+    for(auto& it:ans) {
+        cout << it.first << " : ";
+        for(int i=0; i<it.second.size(); i++) {
+            cout << "(" << it.second[i].first << "," << it.second[i].second << ")";
+            total_wt += it.second[i].second;
+        }
+        cout << endl;
+    }
+
+    cout << endl;
+    cout << "The Weight of MST is: " << total_wt/2 << endl;
+}
+
+
+int main() {
+    unordered_map<int, vector<pair<int, int>>> adj;
+    unordered_map<int, vector<pair<int, int>>> ans_prims;
+    unordered_map<int, vector<pair<int, int>>> ans_kruskals; 
+    int node = 1e9;
+
+    input(adj, node);
+    cout << "Prims: " << endl;
+    prims(adj,ans_prims,node);
+    cout << endl << endl;
+    cout << "Kruskals: " << endl;
+    kruskals(adj,ans_kruskals);
+    
+
+    return 0;
+}
