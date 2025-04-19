@@ -211,14 +211,26 @@ node* delnode(node* root, int dkey) {
     node* ptr = root;
     int found = 0;
 
-    while (ptr != NULL) {
-        if (dkey == ptr->data) {
-            found = 1;
-            break;
-        }
-        par = ptr;
-        ptr = (dkey < ptr->data) ? (!ptr->lthread ? ptr->left : NULL) : (!ptr->rthread ? ptr->right : NULL);
-    }
+        while (ptr != NULL) {
+            if (dkey == ptr->data) {
+                found = 1;
+                break;
+            }
+            par = ptr;
+                   if (dkey < ptr->data) {
+                if (ptr->lthread == false) {
+                    ptr = ptr->left;
+                } else {
+                    ptr = NULL;
+                }
+            } else {
+                if (ptr->rthread == false) {
+                    ptr = ptr->right;
+                } else {
+                    ptr = NULL;
+                }
+            }
+            }
 
     if (!found) {
         cout << "Key not present\n";
