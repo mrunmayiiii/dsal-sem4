@@ -158,7 +158,12 @@ node* casea(node* root, node* par, node* ptr) {
 }
 
 node* caseb(node* root, node* par, node* ptr) {
-    node* child = (ptr->lthread == false) ? ptr->left : ptr->right;
+   node* child;
+    if (ptr->lthread == false) {
+        child = ptr->left;
+    } else {
+        child = ptr->right;
+    }
 
     if (par == NULL) {
         root = child;
