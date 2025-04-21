@@ -1,0 +1,224 @@
+// PROBLEM STATEMENT:-
+// Implementation of a direct access file - Insertion, deletion,
+// updating, and displaying all records from a Direct Access File.
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
+using namespace std;
+
+class Student {
+    int rollNo, division;
+    char name[50], address[100];
+
+public:
+    Student() {
+        rollNo = division = 0;
+        strcpy(name, "");
+        strcpy(address, "");
+    }
+
+    void getData() {
+        cout << "Enter Roll No: ";
+        cin >> rollNo;
+        cin.ignore();
+
+        cout << "Enter Name: ";
+        cin.getline(name, 50);
+
+        cout << "Enter Division: ";
+        cin >> division;
+        cin.ignore();
+
+        cout << "Enter Address: ";
+        cin.getline(address, 100);
+    }
+
+    void showData() {
+        cout << "Roll No: " << rollNo << endl;
+        cout << "Name: " << name << endl;
+        cout << "Division: " << division << endl;
+        cout << "Address: " << address << endl;
+    }
+
+    void insertRecord() {
+        fstream file("students.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            file.open("students.txt", ios::out | ios::binary);
+            file.close();
+            file.open("students.txt", ios::in | ios::out | ios::binary);
+        }
+
+        getData();
+        int pos = (rollNo - 1) * sizeof(Student);
+        file.seekp(pos, ios::beg);
+        file.write((char*)this, sizeof(Student));
+
+        cout << "Record inserted successfully!" << endl;
+        file.close();
+    }
+
+    void displayRecord() {
+    fstream file("students.txt", ios::in | ios::binary);  // Open the file in read-only binary mode
+    if (!file) {
+        cout << "No records found!" << endl;
+        return;
+    }
+
+    int searchRollNo;
+    cout << "Enter Roll No to display: ";
+    cin >> searchRollNo;
+    cout << endl;
+
+    Student Stud;
+    bool found = false;  
+
+    while (file.read((char*)&Stud, sizeof(Student))) {
+        if (Stud.rollNo == searchRollNo && Stud.rollNo != 0) {
+            cout << "Record found:" << endl;
+            Stud.showData();
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "Record not found!" << endl;
+    }
+
+    file.close();  // Close the file
+}
+
+    void deleteRecord() {
+        fstream file("students.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            cout << "No records found!" << endl;
+            return;
+        }
+
+        int deleteRollNo;
+        cout << "Enter Roll No to delete: ";
+        cin >> deleteRollNo;
+        cout << endl;
+
+        int pos = (deleteRollNo - 1) * sizeof(Student);
+        file.seekg(pos, ios::beg);
+
+        Student Stud;
+        file.read((char*)&Stud, sizeof(Student));
+
+        if (file && Stud.rollNo == deleteRollNo && Stud.rollNo != 0) {
+            Student emptyStudent;
+            file.seekp(pos, ios::beg);
+            file.write((char*)&emptyStudent, sizeof(Student));
+            cout << "Record deleted successfully!" << endl;
+        } else {
+            cout << "Record not found!" << endl;
+        }
+        file.close();
+    }
+
+    void updateRecord() {
+        fstream file("students.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            cout << "No records found!" << endl;
+            return;
+        }
+
+        int updateRollNo;
+        cout << "Enter Roll No to update: ";
+        cin >> updateRollNo;
+        cin.ignore();
+
+        int pos = (updateRollNo - 1) * sizeof(Student);
+        file.seekg(pos, ios::beg);
+
+        Student Stud;
+        file.read((char*)&Stud, sizeof(Student));
+
+        if (file && Stud.rollNo == updateRollNo && Stud.rollNo != 0) {
+            cout << "Current record:" << endl;
+            Stud.showData();
+
+            cout << "\nEnter new details:\n";
+            getData();
+
+            file.seekp(pos, ios::beg);
+            file.write((char*)this, sizeof(Student));
+            cout << "Record updated successfully!" << endl;
+        } else {
+            cout << "Record not found!" << endl;
+        }
+
+        file.close();
+    }
+
+    void displayAllRecords() {
+        fstream file("students.txt", ios::in | ios::binary);
+        if (!file) {
+            cout << "No records found!" << endl;
+            return;
+        }
+
+        Student Stud;
+        file.seekg(0, ios::beg);
+        while (file.read((char*)&Stud, sizeof(Student))) {
+            if (Stud.rollNo != 0) {
+                Stud.showData();
+                cout << "---------------------------" << endl;
+            }
+        }
+        file.close();
+    }
+};
+
+int main() {
+    Student Stud;
+    int choice;
+
+    do {
+        cout << endl << " ----- Student Management System ----- " << endl;
+        cout << "1. Insert Record" << endl;
+        cout << "2. Display Record" << endl;
+        cout << "3. Delete Record" << endl;
+        cout << "4. Update Record" << endl;
+        cout << "5. Display All Records" << endl;
+        cout << "6. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+        cin.ignore();
+        cout << endl;
+
+        switch (choice) {
+            case 1:
+                Stud.insertRecord();
+                break;
+
+            case 2:
+                Stud.displayRecord();
+                break;
+
+            case 3:
+                Stud.deleteRecord();
+                break;
+
+            case 4:
+                Stud.updateRecord();
+                break;
+
+            case 5:
+                Stud.displayAllRecords();
+                break;
+
+            case 6:
+                cout << "Exiting..." << endl;
+                break;
+
+            default:
+                cout << "Invalid choice! Please try again." << endl;
+        }
+    } while (choice != 6);
+
+    return 0;
+
+}
