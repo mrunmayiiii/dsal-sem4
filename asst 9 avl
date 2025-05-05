@@ -1,163 +1,117 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <queue>
+#include <map>
+#include <sstream>
 using namespace std;
 
 struct Node {
     string keyword;
     string meaning;
-    int height = 1;
-    Node* left = nullptr;
-    Node* right = nullptr;
+    int height;
+    Node* left;
+    Node* right;
+
+    Node(string k, string m) {
+        keyword = k;
+        meaning = m;
+        height = 1;
+        left = nullptr;
+        right = nullptr;
+    }
 };
 
 class AVLTree {
 private:
-    Node* root = nullptr;
-    int comparisons = 0;
-    string rotationInfo = "No rotation";
+    Node* root;
+    int comparisons;
+    string rotationInfo;
 
     int nodeHeight(Node* node) {
         if (node == nullptr)
             return 0;
-        else
-            return node->height;
+        return node->height;
     }
 
     int getBalanceFactor(Node* node) {
-        if (node == nullptr)
-            return 0;
-        else
-            return nodeHeight(node->left) - nodeHeight(node->right);
+        return nodeHeight(node->left) - nodeHeight(node->right);
     }
 
     void updateHeight(Node* node) {
-        node->height = 1 + max(nodeHeight(node->left), nodeHeight(node->right));
+        int leftHeight = nodeHeight(node->left);
+        int rightHeight = nodeHeight(node->right);
+        node->height = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
     }
 
-    Node* LLRotation(Node* node) {
-        Node* newRoot = node->left;
-        node->left = newRoot->right;
-        newRoot->right = node;
-        updateHeight(node);
-        updateHeight(newRoot);
-        return newRoot;
-    }
+ Node* LLRotation(Node* node) {
+    if (rotationInfo.empty())
+        rotationInfo = "LL Rotation performed";
+    Node* newRoot = node->left;
+    node->left = newRoot->right;
+    newRoot->right = node;
+    updateHeight(node);
+    updateHeight(newRoot);
+    return newRoot;
+}
 
-    Node* RRRotation(Node* node) {
-        Node* newRoot = node->right;
-        node->right = newRoot->left;
-        newRoot->left = node;
-        updateHeight(node);
-        updateHeight(newRoot);
-        return newRoot;
-    }
+Node* RRRotation(Node* node) {
+    if (rotationInfo.empty())
+        rotationInfo = "RR Rotation performed";
+    Node* newRoot = node->right;
+    node->right = newRoot->left;
+    newRoot->left = node;
+    updateHeight(node);
+    updateHeight(newRoot);
+    return newRoot;
+}
 
-    Node* LRRotation(Node* node) {
-        rotationInfo = "LR Rotation performed";
-        node->left = RRRotation(node->left);
-        return LLRotation(node);
-    }
+   Node* LRRotation(Node* node) {
+    node->left = RRRotation(node->left);
+    rotationInfo = "LR Rotation performed";
+    return LLRotation(node);
+}
 
-    Node* RLRotation(Node* node) {
-        rotationInfo = "RL Rotation performed";
-        node->right = LLRotation(node->right);
-        return RRRotation(node);
-    }
+Node* RLRotation(Node* node) {
+    node->right = LLRotation(node->right);
+    rotationInfo = "RL Rotation performed";
+    return RRRotation(node);
+}
+
 
     Node* balance(Node* node) {
+        updateHeight(node);
         int bf = getBalanceFactor(node);
 
-        if (bf == 2) {
+        if (bf > 1) {
             if (getBalanceFactor(node->left) < 0)
-                node = LRRotation(node);
-            else {
-                rotationInfo = "LL Rotation performed";
-                node = LLRotation(node);
-            }
+                return LRRotation(node);
+            return LLRotation(node);
         }
-        else if (bf == -2) {
+        if (bf < -1) {
             if (getBalanceFactor(node->right) > 0)
-                node = RLRotation(node);
-            else {
-                rotationInfo = "RR Rotation performed";
-                node = RRRotation(node);
-            }
-        }
-        else {
-            rotationInfo = "No rotation";
+                return RLRotation(node);
+            return RRRotation(node);
         }
 
-        updateHeight(node);
+        rotationInfo = "No rotation";
         return node;
     }
 
-    Node* insertSubTree(Node* curr, string keyword, string meaning) {
+    Node* insertNode(Node* node, string keyword, string meaning) {
         comparisons++;
 
-        if (curr == nullptr) {
-            Node* newNode = new Node{keyword, meaning};
-            return newNode;
-        }
+        if (node == nullptr)
+            return new Node(keyword, meaning);
 
-        if (keyword < curr->keyword) {
-            curr->left = insertSubTree(curr->left, keyword, meaning);
-        }
-        else if (keyword > curr->keyword) {
-            curr->right = insertSubTree(curr->right, keyword, meaning);
-        }
+        if (keyword < node->keyword)
+            node->left = insertNode(node->left, keyword, meaning);
+        else if (keyword > node->keyword)
+            node->right = insertNode(node->right, keyword, meaning);
         else {
-            curr->meaning = meaning;
-            return curr;
+            node->meaning = meaning; // Update
+            return node;
         }
 
-        return balance(curr);
-    }
-
-    Node* deleteSubTree(Node* root, string keyword) {
-        comparisons++;
-
-        if (root == nullptr)
-            return root;
-
-        if (keyword < root->keyword) {
-            root->left = deleteSubTree(root->left, keyword);
-        }
-        else if (keyword > root->keyword) {
-            root->right = deleteSubTree(root->right, keyword);
-        }
-        else {
-            if (root->left == nullptr || root->right == nullptr) {
-                Node* temp;
-                if (root->left != nullptr)
-                    temp = root->left;
-                else
-                    temp = root->right;
-                delete root;
-                return temp;
-            }
-            else {
-                Node* temp = minValueNode(root->right);
-                root->keyword = temp->keyword;
-                root->meaning = temp->meaning;
-                root->right = deleteSubTree(root->right, temp->keyword);
-            }
-        }
-
-        return balance(root);
-    }
-
-    Node* searchSubTree(Node* curr, string keyword) {
-        comparisons++;
-
-        if (curr == nullptr)
-            return nullptr;
-
-        if (curr->keyword == keyword)
-            return curr;
-
-        if (keyword < curr->keyword)
-            return searchSubTree(curr->left, keyword);
-        else
-            return searchSubTree(curr->right, keyword);
+        return balance(node);
     }
 
     Node* minValueNode(Node* node) {
@@ -166,51 +120,102 @@ private:
         return node;
     }
 
-    void iinorder(Node* root) {
-        if (root == nullptr)
+    Node* deleteNode(Node* node, string keyword) {
+        comparisons++;
+        if (node == nullptr)
+            return nullptr;
+
+        if (keyword < node->keyword)
+            node->left = deleteNode(node->left, keyword);
+        else if (keyword > node->keyword)
+            node->right = deleteNode(node->right, keyword);
+        else {
+            if (node->left == nullptr || node->right == nullptr) {
+                Node* temp = node->left ? node->left : node->right;
+                delete node;
+                return temp;
+            } else {
+                Node* temp = minValueNode(node->right);
+                node->keyword = temp->keyword;
+                node->meaning = temp->meaning;
+                node->right = deleteNode(node->right, temp->keyword);
+            }
+        }
+
+        return balance(node);
+    }
+
+    Node* searchNode(Node* node, string keyword) {
+        comparisons++;
+
+        if (node == nullptr)
+            return nullptr;
+
+        if (keyword == node->keyword)
+            return node;
+
+        if (keyword < node->keyword)
+            return searchNode(node->left, keyword);
+
+        return searchNode(node->right, keyword);
+    }
+
+    void inorderTraversal(Node* node) {
+        if (node == nullptr)
             return;
-        iinorder(root->left);
-        cout << root->keyword << ": " << root->meaning << endl;
-        iinorder(root->right);
+        inorderTraversal(node->left);
+        cout << node->keyword << ": " << node->meaning << endl;
+        inorderTraversal(node->right);
     }
 
 public:
+    AVLTree() {
+        root = nullptr;
+    }
+
     void insert(string keyword, string meaning) {
         comparisons = 0;
         rotationInfo = "No rotation";
-        root = insertSubTree(root, keyword, meaning);
-        cout << "Comparisons made during insert: " << comparisons << endl;
+        root = insertNode(root, keyword, meaning);
+        cout << "Comparisons during insert: " << comparisons << endl;
         cout << rotationInfo << endl;
         BFS();
     }
 
-    void del(string keyword) {
+    void remove(string keyword) {
         comparisons = 0;
         rotationInfo = "No rotation";
-        root = deleteSubTree(root, keyword);
-        cout << "Comparisons made during delete: " << comparisons << endl;
+        root = deleteNode(root, keyword);
+        cout << "Comparisons during delete: " << comparisons << endl;
         cout << rotationInfo << endl;
         BFS();
+    }
+
+    void search(string keyword) {
+        comparisons = 0;
+        Node* result = searchNode(root, keyword);
+        cout << "Comparisons during search: " << comparisons << endl;
+        if (result != nullptr)
+            cout << "Keyword found: " << result->keyword << " -> " << result->meaning << endl;
+        else
+            cout << "Keyword not found.\n";
     }
 
     void inorder() {
-        cout << "\nInorder Traversal (Keyword: Meaning):" << endl;
-        iinorder(root);
+        cout << "\nInorder Traversal (Keyword: Meaning):\n";
+        inorderTraversal(root);
     }
 
     void BFS() {
-        cout << "\nBFS (Tree Structure View):\n";
-
+        cout << "\nBFS (Level Order):\n";
         if (root == nullptr) {
             cout << "Tree is empty.\n";
             return;
         }
 
         queue<pair<Node*, int>> q;
-        int currentLevel = 0;
-
-        q.push({root, 0});
-        map<int, vector<string>> levelMap;
+        map<int, vector<string>> levels;
+        q.push(make_pair(root, 0));
 
         while (!q.empty()) {
             Node* node = q.front().first;
@@ -219,91 +224,71 @@ public:
 
             stringstream ss;
             ss << node->keyword << "(" << node->meaning << ")";
-            levelMap[level].push_back(ss.str());
+            levels[level].push_back(ss.str());
 
-            if (node->left != nullptr)
-                q.push({node->left, level + 1});
-            if (node->right != nullptr)
-                q.push({node->right, level + 1});
+            if (node->left)
+                q.push(make_pair(node->left, level + 1));
+            if (node->right)
+                q.push(make_pair(node->right, level + 1));
         }
 
-        for (auto& level : levelMap) {
+        for (auto& level : levels) {
             cout << "Level " << level.first << ": ";
-            for (auto& val : level.second) {
+            for (string val : level.second)
                 cout << val << "   ";
-            }
             cout << endl;
-        }
-    }
-
-    void search(string keyword) {
-        comparisons = 0;
-        Node* result = searchSubTree(root, keyword);
-        cout << "Comparisons made during search: " << comparisons << endl;
-
-        if (result != nullptr) {
-            cout << "Keyword found: " << keyword << " => " << result->meaning << endl;
-        }
-        else {
-            cout << "Keyword not found.\n";
         }
     }
 };
 
+// ---------- MAIN FUNCTION ----------
 int main() {
     AVLTree tree;
     int choice;
     string keyword, meaning;
 
     do {
-        cout << "\n*** Dictionary Menu ***\n";
-        cout << "1. Insert a new word\n";
+        cout << "\n--- Dictionary Menu ---\n";
+        cout << "1. Insert a word\n";
         cout << "2. Delete a word\n";
-        cout << "3. Search for a word\n";
+        cout << "3. Search a word\n";
         cout << "4. Inorder Traversal\n";
-        cout << "5. Level Order (BFS) Traversal\n";
+        cout << "5. Level Order (BFS)\n";
         cout << "6. Exit\n";
-        cout << "Enter your choice: ";
+        cout << "Enter choice: ";
         cin >> choice;
 
         switch (choice) {
-        case 1:
-            cout << "Enter keyword: ";
-            cin >> keyword;
-            cout << "Enter meaning: ";
-            cin.ignore();
-            getline(cin, meaning);
-            tree.insert(keyword, meaning);
-            break;
-
-        case 2:
-            cout << "Enter keyword to delete: ";
-            cin >> keyword;
-            tree.del(keyword);
-            break;
-
-        case 3:
-            cout << "Enter keyword to search: ";
-            cin >> keyword;
-            tree.search(keyword);
-            break;
-
-        case 4:
-            tree.inorder();
-            break;
-
-        case 5:
-            tree.BFS();
-            break;
-
-        case 6:
-            cout << "Exiting program.\n";
-            break;
-
-        default:
-            cout << "Invalid choice. Please try again.\n";
+            case 1:
+                cout << "Enter keyword: ";
+                cin >> keyword;
+                cout << "Enter meaning: ";
+                cin.ignore();
+                getline(cin, meaning);
+                tree.insert(keyword, meaning);
+                break;
+            case 2:
+                cout << "Enter keyword to delete: ";
+                cin >> keyword;
+                tree.remove(keyword);
+                break;
+            case 3:
+                cout << "Enter keyword to search: ";
+                cin >> keyword;
+                tree.search(keyword);
+                break;
+            case 4:
+                tree.inorder();
+                break;
+            case 5:
+                tree.BFS();
+                break;
+            case 6:
+                cout << "Exiting program.\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
         }
-
     } while (choice != 6);
 
     return 0;
